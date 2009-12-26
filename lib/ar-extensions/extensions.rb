@@ -331,8 +331,8 @@ module ActiveRecord::Extensions
   # A base class for database vendor specific Regexp implementations. This is meant to be
   # subclassed only because of the helper method(s) it provides.
   class RegexpBase 
-
     NOT_EQUAL_RGX = /^(.+)_(ne|not|does_not_match)$/
+    EQUAL_RGX = /^(.+)_(eq|is|matches)$/
     
     # A result class which provides an easy interface. 
     class RegexpResult
@@ -372,7 +372,10 @@ module ActiveRecord::Extensions
       if match_data=str.to_s.match( NOT_EQUAL_RGX )
         negate = true
         str = match_data.captures[0]
-      end      
+      end
+      if match_data=str.to_s.match( EQUAL_RGX )
+        str = match_data.captures[0]
+      end
       fieldname = caller.connection.quote_column_name( str )
       RegexpResult.new( fieldname, negate )
     end
@@ -402,7 +405,9 @@ module ActiveRecord::Extensions
     def self.process( key, val, caller )
       return nil unless val.is_a?( Regexp )
       r = field_result( key, caller )
-      return Result.new( "#{caller.quoted_table_name}.#{r.fieldname} #{r.negate? ? '!~ ':'~'} ?", val )
+      return Result.new((r.negate? \
+       ? "#{caller.quoted_table_name}.#{r.fieldname} !~ ? OR #{caller.quoted_table_name}.#{r.fieldname} IS NULL" \
+       : "#{caller.quoted_table_name}.#{r.fieldname} ~ ?"), val )
     end
 
   end

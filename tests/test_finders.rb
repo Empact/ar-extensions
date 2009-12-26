@@ -382,7 +382,7 @@ class FindersTest< TestCaseSuperClass
     groups = Group.find( :all, :conditions=>{ :created_at_not_between => (now .. now+1) } )
     assert_equal [g1], groups
   end
-  
+
   def test_find_not_matching_regex
     Developer.destroy_all
     rick = Developer.create! :name => "Rick"
@@ -393,7 +393,17 @@ class FindersTest< TestCaseSuperClass
     assert_equal not_rick, Developer.all(:conditions=>{ :name_not=>/Rick/ })
     assert_equal not_rick, Developer.all(:conditions=>{ :name_does_not_match=>/Rick/ })
   end
-  
+
+  def test_find_matching_regex
+    Developer.destroy_all
+    ricks = [Developer.create!(:name => "Rick"), Developer.create!(:name => "Bobby Ricky")]
+    not_rick = [Developer.create!(:name => nil), Developer.create!(:name => "Bobby Jones")]
+
+    assert_equal ricks, Developer.all(:conditions=>{ :name_eq=>/Rick/ })
+    assert_equal ricks, Developer.all(:conditions=>{ :name_is=>/Rick/ })
+    assert_equal ricks, Developer.all(:conditions=>{ :name_matches=>/Rick/ })
+  end
+
   def test_find_not_matching_regex_with_reserved_words
     now = Time.now
     Group.destroy_all
