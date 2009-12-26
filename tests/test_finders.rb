@@ -384,14 +384,14 @@ class FindersTest< TestCaseSuperClass
   end
   
   def test_find_not_matching_regex
-    developers = Developer.find( :all, :conditions=>{ :id_ne=>/9999/ } )
-    assert_equal( Developer.count, developers.size )
-  
-    developers = Developer.find( :all, :conditions=>{ :id_not=>/9999/ } )
-    assert_equal( Developer.count, developers.size )
-    
-    developers = Developer.find( :all, :conditions=>{ :id_does_not_match=>/9999/ } )
-    assert_equal( Developer.count, developers.size )
+    Developer.destroy_all
+    rick = Developer.create! :name => "Rick"
+    another_rick = Developer.create! :name => "Bobby Ricky"
+    not_rick = [Developer.create!(:name => nil), Developer.create!(:name => "Bobby Jones")]
+
+    assert_equal not_rick, Developer.all(:conditions=>{ :name_ne=>/Rick/ })
+    assert_equal not_rick, Developer.all(:conditions=>{ :name_not=>/Rick/ })
+    assert_equal not_rick, Developer.all(:conditions=>{ :name_does_not_match=>/Rick/ })
   end
   
   def test_find_not_matching_regex_with_reserved_words
