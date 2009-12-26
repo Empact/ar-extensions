@@ -434,11 +434,7 @@ module ActiveRecord::Extensions
           def sqlite_regexp_support? ; true ; end
         end
         connection.instance_eval( '@connection' ).create_function( 'rlike', 3 ) do |func, a, b, negate|
-          if negate =~ /true/
-            func.set_result 1 if a.to_s !~ /#{b}/
-          else
-            func.set_result 1 if a.to_s =~ /#{b}/
-          end
+          func.set_result 1 if negate.to_s == 'true' ? a.to_s !~ /#{b}/ : a.to_s =~ /#{b}/
         end
       end
     end 
