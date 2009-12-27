@@ -280,9 +280,8 @@ module ActiveRecord
             update_existing_record(options)
             reloaded = true
           else
-            raise e
+            raise
           end
-
         end
 
         load_duplicate_record(options) if options[:reload] && !reloaded

@@ -15,23 +15,6 @@ class ImportTest< TestCaseSuperClass
     Topic.destroy_all
   end
 
-  def wrap_within_a_transaction(&blk)
-    # sqlite doesn't support nested transactions. Since
-    # postgresql is ritarded and requires people to manually
-    # handle constraint exceptions we have to wrap the passed
-    # in block in a transaction block. MySQL and PostgreSQL support
-    # this fine. 
-    #
-    # TODO - find out from Michael Flester if Oracle supports this
-    if Book.connection.class.name =~ /sqlite/i
-      blk.call
-    else
-      Book.connection.transaction do
-        blk.call
-      end
-    end
-  end
-  
   def test_quoted_column_names  
     column_names = %W{ col1 col2 }
     actual = ActiveRecord::Base.quote_column_names( column_names )
@@ -283,19 +266,12 @@ class ImportTest< TestCaseSuperClass
   
   def test_import_should_not_add_or_overwrite_existing_models
     book = nil
-    wrap_within_a_transaction do
-      Book.destroy_all
-      book = Book.create! :title=>"book1", :author_name=>"Zach", :publisher=>"Pub"
-      assert_equal 1, Book.count
-    end
+    Book.destroy_all
+    book = Book.create! :title=>"book1", :author_name=>"Zach", :publisher=>"Pub"
+    assert_equal 1, Book.count
 
-    wrap_within_a_transaction do
-      book.title = "New Title"
-      begin
-         Book.import [ book ]
-      rescue Exception
-      end
-    end
+    book.title = "New Title"
+    assert_raise(ActiveRecord::StatementInvalid) { Book.import [ book ] }
     assert_equal 1, Book.count
   
     book.reload

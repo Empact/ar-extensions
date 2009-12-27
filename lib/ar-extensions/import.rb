@@ -271,7 +271,13 @@ class ActiveRecord::Base
             end
           end
           insert_statements << "INSERT INTO #{quoted_table_name} #{columns_sql} VALUES(" + my_values.join( ',' ) + ")"
-          connection.execute( insert_statements.last )
+          begin
+            connection.create_savepoint
+            connection.execute( insert_statements.last )
+          rescue ActiveRecord::StatementInvalid
+            connection.rollback_to_savepoint
+            raise
+          end
           number_inserted += 1
         end
       else
