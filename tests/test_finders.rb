@@ -155,15 +155,14 @@ class FindersTest< TestCaseSuperClass
   end  
   
   def test_find_with_ends_with
-    developers = Developer.find( :all, :conditions=>{ :name_ends_with=>'Dennis' } )
-    assert_equal( 1, developers.size )
-  
-    # we shouldn't find an issue which ends with the first name Zach
-    developers = Developer.find( :all, :conditions=>{ :name_ends_with=>'Zach' } )
-    assert_equal( 0, developers.size )
-  
-    developers = Developer.find( :all, :conditions=>{ :name_ends_with=>['is', 'oe'] } )
-    assert_equal( 2, developers.size )
+    Developer.destroy_all
+    rick = Developer.create! :name => "Rick"
+    another_rick = Developer.create! :name => "Bobby Ricky"
+    not_rick = [Developer.create!(:name => nil), Developer.create!(:name => "Bobby Jones")]
+
+    assert_equal( [], Developer.find( :all, :conditions=>{ :name_ends_with=>'Bobby' } ) )
+    assert_equal( [rick, another_rick], Developer.find( :all, :conditions=>{ :name_ends_with=>['ck', 'ky'] } ) )
+    assert_equal( [another_rick], Developer.find( :all, :conditions=>{ :name_ends_with=>'Ricky' } ))
   end
 
   def test_find_with_ends_with_with_reserved_words

@@ -182,7 +182,7 @@ module ActiveRecord::Extensions
         key = match_data.captures[0] if match_data
         str = "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( key )} " +
           (match_data ? 'NOT ' : '') + "IN( ? )"
-        return Result.new( str, val )
+        return Result.new( str, [val] )
       end
       nil
     end
@@ -256,35 +256,30 @@ module ActiveRecord::Extensions
     STARTS_WITH_RGX = /(.+)_starts_with$/
     ENDS_WITH_RGX =  /(.+)_ends_with$/
     def self.process( key, val, caller )
-      values = [*val]
+      values = Array(val)
+      result_values = []
       case key.to_s
       when LIKE_RGX
         str = values.collect do |v|
-          "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( $1 )} LIKE " +
-            "#{caller.connection.quote( '%%' + v + '%%', caller.columns_hash[ $1 ] )} "
+          result_values << "%%#{v}%%"
+          "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( $1 )} LIKE ?"
         end
       when STARTS_WITH_RGX
         str = values.collect do |v|
-           "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( $1 )} LIKE " +
-            "#{caller.connection.quote( v + '%%', caller.columns_hash[ $1 ] )} "
+          result_values << "#{v}%%"
+           "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( $1 )} LIKE ?"
         end
       when ENDS_WITH_RGX
         str = values.collect do |v|
-           "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( $1 )} LIKE " +
-            "#{caller.connection.quote( '%%' + v, caller.columns_hash[ $1 ] )} "
+          result_values << "%%#{v}"
+          "#{caller.quoted_table_name}.#{caller.connection.quote_column_name( $1 )} LIKE ?"
         end
       else
         return nil
       end
 
       str = str.join(' OR ')
-      result_values = []
-      str.gsub!(/'((%%)?([^\?]*\?[^%]*|[^%]*%[^%]*)(%%)?)'/) do |match|
-        result_values << $2
-        '?'
-      end
-      result_values = nil if result_values.empty?
-      return Result.new(str , result_values)
+      return Result.new(str, result_values)
     end
   end
 
