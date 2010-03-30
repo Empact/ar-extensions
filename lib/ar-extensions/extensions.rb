@@ -256,7 +256,14 @@ module ActiveRecord::Extensions
     STARTS_WITH_RGX = /(.+)_starts_with$/
     ENDS_WITH_RGX =  /(.+)_ends_with$/
     def self.process( key, val, caller )
-      values = Array(val)
+      values = case val
+        when NilClass
+          []
+        when Array
+          val
+        else
+          [val]
+        end
       result_values = []
       case key.to_s
       when LIKE_RGX
