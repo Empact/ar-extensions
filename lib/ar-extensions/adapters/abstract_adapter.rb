@@ -75,7 +75,7 @@ module ActiveRecord # :nodoc:
       # Returns an array of post SQL statements given the passed in options.
       def post_sql_statements( table_name, options ) # :nodoc:
         post_sql_statements = []
-        if options[:on_duplicate_key_update]
+        if is_a?(ActiveRecord::Extensions::Import::OnDuplicateKeyUpdateSupport) && options[:on_duplicate_key_update]
           post_sql_statements << sql_for_on_duplicate_key_update( table_name, options[:on_duplicate_key_update] )
         end
 
